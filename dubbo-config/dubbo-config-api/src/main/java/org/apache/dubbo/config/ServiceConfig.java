@@ -320,6 +320,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
 
+        // 暴露协议
         for (ProtocolConfig protocolConfig : protocols) {
             String pathKey = URL.buildKey(getContextPath(protocolConfig)
                     .map(p -> p + "/" + path)
@@ -492,9 +493,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                             registryURL = registryURL.addParameter(PROXY_KEY, proxy);
                         }
 
+                        // 通过代理工厂获取invoker。invoker 是执行者的真正信息
                         Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
+                        // 在此处需要暴露invoker
                         Exporter<?> exporter = PROTOCOL.export(wrapperInvoker);
                         exporters.add(exporter);
                     }

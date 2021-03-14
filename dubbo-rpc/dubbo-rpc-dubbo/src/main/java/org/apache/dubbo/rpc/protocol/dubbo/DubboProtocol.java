@@ -301,6 +301,7 @@ public class DubboProtocol extends AbstractProtocol {
             }
         }
 
+        // 打开服务器，其实就是启动netty服务器，监听20880端口
         openServer(url);
         optimizeSerialization(url);
 
@@ -328,6 +329,7 @@ public class DubboProtocol extends AbstractProtocol {
         }
     }
 
+    // 创建服务器
     private ProtocolServer createServer(URL url) {
         url = URLBuilder.from(url)
                 // send readonly event when server closes, it's enabled by default
