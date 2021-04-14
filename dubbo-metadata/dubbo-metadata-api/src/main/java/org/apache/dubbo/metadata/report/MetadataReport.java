@@ -30,6 +30,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+//        Provider暴露的接口服务的URL信息
+//        Consumer订阅的接口服务的URL信息
+//        接口的定义信息
 public interface MetadataReport {
     /**
      * Service Definition -- START

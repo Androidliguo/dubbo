@@ -57,11 +57,13 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
         this.appExternalConfiguration = new InmemoryConfiguration();
     }
 
+
     @Override
     public void initialize() throws IllegalStateException {
         ConfigManager configManager = ApplicationModel.getConfigManager();
         Optional<Collection<ConfigCenterConfig>> defaultConfigs = configManager.getDefaultConfigCenter();
         defaultConfigs.ifPresent(configs -> {
+            //其实就是将配置中心ConfigCenter的信息存入到本地缓存中
             for (ConfigCenterConfig config : configs) {
                 this.setExternalConfigMap(config.getExternalConfiguration());
                 this.setAppExternalConfigMap(config.getAppExternalConfiguration());
