@@ -149,6 +149,8 @@ public class ProtocolFilterWrapper implements Protocol {
 
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
+
+        // 当 invoker.url.protocl = registry ，注册中心的 URL ，无需创建 Filter 过滤链。
         if (UrlUtils.isRegistry(invoker.getUrl())) {
             return protocol.export(invoker);
         }

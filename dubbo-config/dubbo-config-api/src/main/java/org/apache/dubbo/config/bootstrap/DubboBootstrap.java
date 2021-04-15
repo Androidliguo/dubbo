@@ -1099,12 +1099,17 @@ public class DubboBootstrap extends GenericEventListener {
         }
     }
 
+    /**
+     * 暴露所有的服务
+     */
     private void exportServices() {
 
-        //从配置管理器中获取到所有的要暴露的服务配置，一个接口类对应一个ServiceConfigBase实例
+        //从配置管理器中获取到所有的ServiceConfig实例，遍历，然后一个一个的暴露
         configManager.getServices().forEach(sc -> {
             // TODO, compatible with ServiceConfig.export()
+            // 服务export的核心逻辑方法是ServiceConfig#export()
             ServiceConfig serviceConfig = (ServiceConfig) sc;
+            //将DubboBootstrap实例赋值给ServiceConfig
             serviceConfig.setBootstrap(this);
 
             //判断是否异步暴露接口
@@ -1118,6 +1123,7 @@ public class DubboBootstrap extends GenericEventListener {
                 });
                 asyncExportingFutures.add(future);
             } else {
+                //同步export
                 sc.export();
                 exportedServices.add(sc);
             }

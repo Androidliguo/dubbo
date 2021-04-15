@@ -136,8 +136,11 @@ public class RegistryProtocol implements Protocol {
     private final ProviderConfigurationListener providerConfigurationListener = new ProviderConfigurationListener();
     //To solve the problem of RMI repeated exposure port conflicts, the services that have been exposed are no longer exposed.
     //providerurl <--> exporter
+    // 用于解决rmi重复暴露端口冲突的问题，已经暴露过的服务不再重新暴露
     private final ConcurrentMap<String, ExporterChangeableWrapper<?>> bounds = new ConcurrentHashMap<>();
+    //  Protocol 自适应拓展实现类，通过 Dubbo SPI 自动注入。
     protected Protocol protocol;
+    // RegistryFactory 自适应拓展实现类，通过 Dubbo SPI 自动注入。
     protected RegistryFactory registryFactory;
     protected ProxyFactory proxyFactory;
 
@@ -207,24 +210,30 @@ public class RegistryProtocol implements Protocol {
         providerUrl = overrideUrlWithConfig(providerUrl, overrideSubscribeListener);
 
 
+        // 暴露服务
         // 本地暴露
         //export invoker
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker, providerUrl);
 
+        // 获得注册中心 URL
         // url to registry
         final Registry registry = getRegistry(originInvoker);
+        // 获得服务提供者 URL
         final URL registeredProviderUrl = getUrlToRegistry(providerUrl, registryUrl);
 
         // decide if we need to delay publish
+        // 获得注册中心对象
         boolean register = providerUrl.getParameter(REGISTER_KEY, true);
         if (register) {
             register(registryUrl, registeredProviderUrl);
         }
 
+        // 向本地注册表，注册服务提供者
         // register stated url on provider model
         registerStatedUrl(registryUrl, registeredProviderUrl, register);
 
 
+        // 使用 OverrideListener 对象，订阅配置规则
         exporter.setRegisterUrl(registeredProviderUrl);
         exporter.setSubscribeUrl(overrideSubscribeUrl);
 
@@ -255,8 +264,10 @@ public class RegistryProtocol implements Protocol {
 
     @SuppressWarnings("unchecked")
     private <T> ExporterChangeableWrapper<T> doLocalExport(final Invoker<T> originInvoker, URL providerUrl) {
+        // 获得在 `bounds` 中的缓存 Key
         String key = getCacheKey(originInvoker);
 
+        // 从 `bounds` 获得，是不是已经暴露过服务
         return (ExporterChangeableWrapper<T>) bounds.computeIfAbsent(key, s -> {
             Invoker<?> invokerDelegate = new InvokerDelegate<>(originInvoker, providerUrl);
             return new ExporterChangeableWrapper<>((Exporter<T>) protocol.export(invokerDelegate), originInvoker);
@@ -811,6 +822,7 @@ public class RegistryProtocol implements Protocol {
     }
 
     // for unit test
+    //  单例。在 Dubbo SPI 中，被初始化，有且仅有一次。
     private static RegistryProtocol INSTANCE;
 
     // for unit test
