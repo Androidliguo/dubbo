@@ -195,7 +195,13 @@ public class RegistryProtocol implements Protocol {
 
     @Override
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
+
+        // 获取注册中心 URL，以 zookeeper 注册中心为例，得到的示例 URL 如下：
+        // zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.2&export=dubbo%3A%2F%2F172.17.48.52%3A20880%2Fcom.alibaba.dubbo.demo.DemoService%3Fanyhost%3Dtrue%26application%3Ddemo-provider
         URL registryUrl = getRegistryUrl(originInvoker);
+
+        // 获取已注册的服务提供者 URL，比如：
+        // dubbo://172.17.48.52:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&dubbo=2.0.2&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello
         // url to export locally
         URL providerUrl = getProviderUrl(originInvoker);
 
@@ -224,10 +230,15 @@ public class RegistryProtocol implements Protocol {
         // decide if we need to delay publish
         // 获得注册中心对象
         boolean register = providerUrl.getParameter(REGISTER_KEY, true);
+
+        // 根据 register 的值决定是否注册服务
         if (register) {
+
+            // 向注册中心注册服务
             register(registryUrl, registeredProviderUrl);
         }
 
+        // 向服务提供者与消费者注册表中注册服务提供者
         // 向本地注册表，注册服务提供者
         // register stated url on provider model
         registerStatedUrl(registryUrl, registeredProviderUrl, register);
@@ -237,10 +248,13 @@ public class RegistryProtocol implements Protocol {
         exporter.setRegisterUrl(registeredProviderUrl);
         exporter.setSubscribeUrl(overrideSubscribeUrl);
 
+        // 向注册中心进行订阅 override 数据
         // Deprecated! Subscribe to override rules in 2.6.x or before.
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
 
         notifyExport(exporter);
+
+        // 创建并返回 DestroyableExporter
         //Ensure that a new exporter instance is returned every time export
         return new DestroyableExporter<>(exporter);
     }

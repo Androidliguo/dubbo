@@ -202,7 +202,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         //设置服务的实现类
         serviceMetadata.setTarget(getRef());
 
-        //如果服务已经export就返回
+        //有时候我们只是想本地启动服务进行一些调试工作，我们并不希望把本地启动的服务暴露出去给别人调用。
+        //此时，我们可通过配置 export 禁止服务导出，比如
+        // <dubbo:provider export="false" />
         if (!shouldExport()) {
             return;
         }
@@ -307,10 +309,10 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         if (unexported) {
             throw new IllegalStateException("The service " + interfaceClass.getName() + " has already unexported!");
         }
+        //如果服务已经被暴露，就返回
         if (exported) {
             return;
         }
-        //如果服务已经被暴露，就返回
         exported = true;
 
         //设置path值，只为接口的全限定名
@@ -368,9 +370,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         }
 
         //组装参数
+       // 添加 side、版本、时间戳以及进程号等信息到 map 中
         Map<String, String> map = new HashMap<String, String>();
         map.put(SIDE_KEY, PROVIDER_SIDE);
 
+        // 通过反射将对象的字段信息添加到 map 中
         ServiceConfig.appendRuntimeParameters(map);
         AbstractConfig.appendParameters(map, getMetrics());
         AbstractConfig.appendParameters(map, getApplication());
@@ -384,19 +388,29 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         if (metadataReportConfig != null && metadataReportConfig.isValid()) {
             map.putIfAbsent(METADATA_KEY, REMOTE_METADATA_STORAGE_TYPE);
         }
+
+        // methods 为 MethodConfig 集合，MethodConfig 中存储了 <dubbo:method> 标签的配置信息
         if (CollectionUtils.isNotEmpty(getMethods())) {
             for (MethodConfig method : getMethods()) {
+
+                // 添加 MethodConfig 对象的字段信息到 map 中，键 = 方法名.属性名。
+                // 比如存储 <dubbo:method name="sayHello" retries="2"> 对应的 MethodConfig，
+                // 键 = sayHello.retries，map = {"sayHello.retries": 2, "xxx": "yyy"}
                 AbstractConfig.appendParameters(map, method, method.getName());
                 String retryKey = method.getName() + ".retry";
                 if (map.containsKey(retryKey)) {
                     String retryValue = map.remove(retryKey);
+                    // 检测 MethodConfig retry 是否为 false，若是，则设置重试次数为0
                     if ("false".equals(retryValue)) {
                         map.put(method.getName() + ".retries", "0");
                     }
                 }
+
+                // 获取 ArgumentConfig 列表
                 List<ArgumentConfig> arguments = method.getArguments();
                 if (CollectionUtils.isNotEmpty(arguments)) {
                     for (ArgumentConfig argument : arguments) {
+                        // 检测 type 属性是否为空，或者空串（分支1 ⭐️）
                         // convert argument type
                         if (argument.getType() != null && argument.getType().length() > 0) {
                             Method[] methods = interfaceClass.getMethods();
@@ -404,17 +418,25 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                             if (methods.length > 0) {
                                 for (int i = 0; i < methods.length; i++) {
                                     String methodName = methods[i].getName();
+                                    // 比对方法名，查找目标方法
                                     // target the method, and get its signature
                                     if (methodName.equals(method.getName())) {
                                         Class<?>[] argtypes = methods[i].getParameterTypes();
                                         // one callback in the method
                                         if (argument.getIndex() != -1) {
+                                            // 检测 ArgumentConfig 中的 type 属性与方法参数列表
+                                            // 中的参数名称是否一致，不一致则抛出异常(分支2 ⭐️)
                                             if (argtypes[argument.getIndex()].getName().equals(argument.getType())) {
+                                                // 添加 ArgumentConfig 字段信息到 map 中，
+                                                // 键前缀 = 方法名.index，比如:
+                                                // map = {"sayHello.3": true}
                                                 AbstractConfig.appendParameters(map, argument, method.getName() + "." + argument.getIndex());
                                             } else {
                                                 throw new IllegalArgumentException("Argument config error : the index attribute and type attribute not match :index :" + argument.getIndex() + ", type:" + argument.getType());
                                             }
                                         } else {
+
+                                            // 从参数类型列表中查找类型名称为 argument.type 的参数
                                             // multiple callbacks in the method
                                             for (int j = 0; j < argtypes.length; j++) {
                                                 Class<?> argclazz = argtypes[j];
@@ -429,7 +451,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                                     }
                                 }
                             }
+                            // 用户未配置 type 属性，但配置了 index 属性，且 index != -1
                         } else if (argument.getIndex() != -1) {
+                            // 添加 ArgumentConfig 字段信息到 map 中
                             AbstractConfig.appendParameters(map, argument, method.getName() + "." + argument.getIndex());
                         } else {
                             throw new IllegalArgumentException("Argument config must set index or type attribute.eg: <dubbo:argument index='0' .../> or <dubbo:argument type=xxx .../>");
@@ -535,6 +559,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
                         Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
 
+                        // DelegateProviderMetaDataInvoker 用于持有 Invoker 和 ServiceConfig
                         //生成Invoker的包装类，实现了Invoker接口，其本身也是一个Invoker，只是在invoker的基础上扩展了ServiceConfig
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
@@ -546,6 +571,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                     }
                 } else {
 
+                    // 不存在注册中心，仅导出服务
                     // 用于被服务消费者直连服务提供者
                     if (logger.isInfoEnabled()) {
                         logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
