@@ -1,0 +1,22 @@
+@startuml
+DubboBootstrapApplicationListener ->> DubboBootstrapApplicationListener: 监听onContextRefreshedEvent
+DubboBootstrapApplicationListener -> DubboBootstrap
+DubboBootstrap  ->> DubboBootstrap: Start the bootstrap
+DubboBootstrap  ->> DubboBootstrap: exportServices
+DubboBootstrap -> ServiceConfig:暴露服务
+ServiceConfig  ->> ServiceConfig: export
+ServiceConfig  ->> ServiceConfig: doExport
+ServiceConfig  ->> ServiceConfig: doExportUrls
+ServiceConfig  ->> ServiceConfig: loadRegistries
+ServiceConfig  ->> ServiceConfig: doExportUrlsFor1Protocol
+ServiceConfig  ->> ServiceConfig: new URL
+ServiceConfig  ->> ServiceConfig: new URL
+ServiceConfig  ->> ProxyFactory: createInvoker
+ProxyFactory  -> Invoker: init
+ServiceConfig  -> Protocol: export
+Protocol  -> Exporter: init
+Exporter  -> Transporter: bind
+Transporter  -> Server: init
+Protocol  -> ExporterListener: exported()
+ExporterListener  -> Registry: register
+@enduml
