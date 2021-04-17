@@ -556,7 +556,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
                         // 通过代理工厂获取invoker。invoker 是执行者的真正信息
                         // 使用ProxyFactory来生成接口的代理
-
+                        // 为invoker 通过JavassistProxyFactory 创建了一个代理对象。后面所有调用invoker 接口的方法都需要通过这个代理对象来执行。
                         Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
 
                         // DelegateProviderMetaDataInvoker 用于持有 Invoker 和 ServiceConfig
@@ -578,6 +578,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                     }
 
                     // 使用 ProxyFactory 创建 Invoker 对象
+                    // 为invoker 通过JavassistProxyFactory 创建了一个代理对象。后面所有调用invoker 接口的方法都需要通过这个代理对象来执行。
                     Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, url);
                     // 创建 DelegateProviderMetaDataInvoker 对象
                     DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);

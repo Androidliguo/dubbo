@@ -573,7 +573,9 @@ public class ExtensionLoader<T> {
 
     @SuppressWarnings("unchecked")
     public T getAdaptiveExtension() {
+        // 从缓存中获取自适应拓展
         Object instance = cachedAdaptiveInstance.get();
+        // 缓存未命中
         if (instance == null) {
             if (createAdaptiveInstanceError != null) {
                 throw new IllegalStateException("Failed to create adaptive instance: " +
@@ -581,11 +583,14 @@ public class ExtensionLoader<T> {
                         createAdaptiveInstanceError);
             }
 
+            // 根据双重检测锁创建自适应拓展，并且加载到缓存中
             synchronized (cachedAdaptiveInstance) {
                 instance = cachedAdaptiveInstance.get();
                 if (instance == null) {
                     try {
+                        // 创建自适应拓展
                         instance = createAdaptiveExtension();
+                        // 设置自适应拓展到缓存中
                         cachedAdaptiveInstance.set(instance);
                     } catch (Throwable t) {
                         createAdaptiveInstanceError = t;
@@ -1016,6 +1021,8 @@ public class ExtensionLoader<T> {
     @SuppressWarnings("unchecked")
     private T createAdaptiveExtension() {
         try {
+
+            // 获取自适应拓展类，并通过反射实例化
             return injectExtension((T) getAdaptiveExtensionClass().newInstance());
         } catch (Exception e) {
             throw new IllegalStateException("Can't create adaptive extension " + type + ", cause: " + e.getMessage(), e);
@@ -1023,17 +1030,27 @@ public class ExtensionLoader<T> {
     }
 
     private Class<?> getAdaptiveExtensionClass() {
+
+        // 通过 SPI 获取所有的拓展类
         getExtensionClasses();
+
+        // 检查缓存，若缓存不为空，则直接返回缓存
         if (cachedAdaptiveClass != null) {
             return cachedAdaptiveClass;
         }
+
+        // 创建自适应拓展类
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 
     private Class<?> createAdaptiveExtensionClass() {
+
+        // 构建自适应拓展代码
         String code = new AdaptiveClassCodeGenerator(type, cachedDefaultName).generate();
         ClassLoader classLoader = findClassLoader();
+        // 获取编译器实现类
         org.apache.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();
+        // 编译代码，生成 Class
         return compiler.compile(code, classLoader);
     }
 
