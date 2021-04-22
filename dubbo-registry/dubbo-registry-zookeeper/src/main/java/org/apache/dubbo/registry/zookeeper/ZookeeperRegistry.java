@@ -260,7 +260,13 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
     }
 
-    // 获得根目录
+    /**
+     * 获得根目录
+     *
+     * Root
+     *
+     * @return 路径
+     */
     private String toRootDir() {
         if (root.equals(PATH_SEPARATOR)) {
             return root;
@@ -273,7 +279,14 @@ public class ZookeeperRegistry extends FailbackRegistry {
         return root;
     }
 
-    //  获得服务路径
+    /**
+     * 获得服务路径
+     *
+     * Root + Type
+     *
+     * @param url URL
+     * @return 服务路径
+     */
     private String toServicePath(URL url) {
         String name = url.getServiceInterface();
         if (ANY_VALUE.equals(name)) {
@@ -283,6 +296,14 @@ public class ZookeeperRegistry extends FailbackRegistry {
         return toRootDir() + URL.encode(name);
     }
 
+    /**
+     * 获得分类路径数组
+     *
+     * Root + Service + Type
+     *
+     * @param url URL
+     * @return 分类路径数组
+     */
     private String[] toCategoriesPath(URL url) {
         String[] categories;
         if (ANY_VALUE.equals(url.getParameter(CATEGORY_KEY))) {
