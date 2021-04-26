@@ -122,6 +122,10 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
         }
     }
 
+    /**
+     *
+     * 获得注册中心 Registry 对象。优先从缓存中获取，否则进行创建。
+     */
     @Override
     public Registry getRegistry(URL url) {
         if (destroyed.get()) {
