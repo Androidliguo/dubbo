@@ -43,6 +43,10 @@ import static org.apache.dubbo.registry.Constants.REGISTRY_RETRY_PERIOD_KEY;
 
 /**
  * FailbackRegistry. (SPI, Prototype, ThreadSafe)
+ * 实现 AbstractRegistry 抽象类，支持失败重试的 Registry 抽象类。
+ *
+ * 在上文中的代码中，我们可以看到，AbstractRegistry 进行的注册、订阅等操作，更多的是修改状态，而无和注册中心实际的操作。
+ * FailbackRegistry 在 AbstractRegistry 的基础上，实现了和注册中心实际的操作，并且支持失败重试的特性。
  */
 public abstract class FailbackRegistry extends AbstractRegistry {
 
@@ -61,6 +65,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
      */
     private final int retryPeriod;
 
+    // 定时任务执行器
     // Timer for failure retry, regular check if there is a request for failure, and if there is, an unlimited retry
     private final HashedWheelTimer retryTimer;
 

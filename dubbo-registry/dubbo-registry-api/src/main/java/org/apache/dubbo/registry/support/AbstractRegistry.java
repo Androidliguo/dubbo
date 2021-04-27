@@ -322,6 +322,11 @@ public abstract class AbstractRegistry implements Registry {
         return result;
     }
 
+    /**
+     * 从实现上，我们可以看出，并未向注册中心发起注册，仅仅是添加到 registered 中，进行状态的维护。
+     * 实际上，真正的实现在 FailbackRegistry 类中。
+     *
+     */
     @Override
     public void register(URL url) {
         if (url == null) {
@@ -379,6 +384,7 @@ public abstract class AbstractRegistry implements Registry {
         notified.remove(url);
     }
 
+    // 在注册中心断开，重连成功，调用 #recover() 方法，进行恢复注册和订阅。
     protected void recover() throws Exception {
         // register
         Set<URL> recoverRegistered = new HashSet<>(getRegistered());
@@ -432,10 +438,14 @@ public abstract class AbstractRegistry implements Registry {
 
     /**
      * Notify changes from the Provider side.
+     * 第一，向注册中心发起订阅后，会获取到全量数据，此时会被调用 #notify(...) 方法，即 Registry 获取到了全量数据。
      *
-     * @param url      consumer side url
-     * @param listener listener
-     * @param urls     provider latest urls
+     * 第二，每次注册中心发生变更时，会调用 #notify(...) 方法，虽然变化是增量，
+     * 调用这个方法的调用方，已经进行处理，传入的 urls 依然是全量的。
+     *
+     * @param url      consumer side url       消费者 URL
+     * @param listener listener                监听器
+     * @param urls     provider latest urls    通知的 URL 变化结果（全量数据）
      */
     protected void notify(URL url, NotifyListener listener, List<URL> urls) {
         if (url == null) {
@@ -453,6 +463,7 @@ public abstract class AbstractRegistry implements Registry {
             logger.info("Notify urls for subscribe url " + url + ", urls: " + urls);
         }
         // keep every provider's category.
+        // 将 `urls` 按照 `url.parameter.category` 分类，添加到集合
         Map<String, List<URL>> result = new HashMap<>();
         for (URL u : urls) {
             if (UrlUtils.isMatch(url, u)) {
@@ -464,14 +475,21 @@ public abstract class AbstractRegistry implements Registry {
         if (result.size() == 0) {
             return;
         }
+
+        // 获得消费者 URL 对应的在 `notified` 中，通知的 URL 变化结果（全量数据）
         Map<String, List<URL>> categoryNotified = notified.computeIfAbsent(url, u -> new ConcurrentHashMap<>());
+        // 处理通知的 URL 变化结果（全量数据）
         for (Map.Entry<String, List<URL>> entry : result.entrySet()) {
             String category = entry.getKey();
             List<URL> categoryList = entry.getValue();
+            // 覆盖到 `notified`
+            // 当某个分类的数据为空时，会依然有 urls 。其中 `urls[0].protocol = empty` ，通过这样的方式，处理所有服务提供者为空的情况。
             categoryNotified.put(category, categoryList);
+            // 通知监听器
             listener.notify(categoryList);
             // We will update our cache file after each notification.
             // When our Registry has a subscribe failure due to network jitter, we can return at least the existing cache URL.
+            // 保存到文件
             saveProperties(url);
         }
     }
