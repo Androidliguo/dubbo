@@ -79,7 +79,12 @@ import static org.apache.dubbo.rpc.cluster.Constants.ROUTER_KEY;
 
 
 /**
+ * RegistryDirectory 是一种动态服务目录，实现了 NotifyListener 接口。
+ * 当注册中心服务配置发生变化后，RegistryDirectory 可收到与当前服务相关的变化。收到变更通知后，
+ * RegistryDirectory 可根据配置变更信息刷新 Invoker 列表。
+ * RegistryDirectory 中有几个比较重要的逻辑，第一是 Invoker 的列举逻辑，第二是接收服务配置变更的逻辑，第三是 Invoker 列表的刷新逻辑。
  * RegistryDirectory
+ *
  */
 public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyListener {
     private static final Logger logger = LoggerFactory.getLogger(RegistryDirectory.class);
@@ -140,6 +145,12 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
         }
     }
 
+
+    /**
+     * RegistryDirectory 是一个动态服务目录，会随注册中心配置的变化进行动态调整。
+     * 因此 RegistryDirectory 实现了 NotifyListener 接口，通过这个接口获取注册中心变更通知。
+     * @param urls  urls 已注册信息列表，
+     */
     @Override
     public synchronized void notify(List<URL> urls) {
         Map<String, List<URL>> categoryUrls = urls.stream()
@@ -148,13 +159,20 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
                 .filter(this::isNotCompatibleFor26x)
                 .collect(Collectors.groupingBy(this::judgeCategory));
 
+        /**
+         *  定义三个集合，分别用于存放服务提供者 url，路由 url，配置器 url
+         */
+
+        // 配置器 url
         List<URL> configuratorURLs = categoryUrls.getOrDefault(CONFIGURATORS_CATEGORY, Collections.emptyList());
         this.configurators = Configurator.toConfigurators(configuratorURLs).orElse(this.configurators);
 
+        // 路由 url
         List<URL> routerURLs = categoryUrls.getOrDefault(ROUTERS_CATEGORY, Collections.emptyList());
         toRouters(routerURLs).ifPresent(this::addRouters);
 
         // providers
+        // 服务提供者 url
         List<URL> providerURLs = categoryUrls.getOrDefault(PROVIDERS_CATEGORY, Collections.emptyList());
         /**
          * 3.x added for extend URL address
@@ -503,6 +521,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
     @Override
     public List<Invoker<T>> doList(Invocation invocation) {
         if (forbidden) {
+            // 服务提供者关闭或禁用了服务，此时抛出 No provider 异常
             // 1. No service provider 2. Service providers are disabled
             throw new RpcException(RpcException.FORBIDDEN_EXCEPTION, "No provider available from registry " +
                     getUrl().getAddress() + " for service " + getConsumerUrl().getServiceKey() + " on consumer " +
