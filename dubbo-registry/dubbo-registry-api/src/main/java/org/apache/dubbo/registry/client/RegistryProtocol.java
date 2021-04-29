@@ -458,9 +458,15 @@ public class RegistryProtocol implements Protocol {
         return key;
     }
 
+    /**
+     * 首先为 url 设置协议头，然后根据 url 参数加载注册中心实例。
+     * 然后获取 group 配置，根据 group 配置决定 doRefer 第一个参数的类型。
+     */
     @Override
     @SuppressWarnings("unchecked")
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
+
+        // 取 registry 参数值，并将其设置为协议头
         url = getRegistryUrl(url);
         // 获取注册中心实例
         Registry registry = registryFactory.getRegistry(url);
@@ -501,6 +507,13 @@ public class RegistryProtocol implements Protocol {
         return invoker;
     }
 
+    /**
+     *  doRefer 方法创建一个 RegistryDirectory 实例，然后生成服务者消费者链接，并向注册中心进行注册。
+     *  注册完毕后，紧接着订阅 providers、configurators、routers 等节点下的数据。
+     *  完成订阅后，RegistryDirectory 会收到这几个节点下的子节点信息。
+     *  由于一个服务可能部署在多台服务器上，这样就会在 providers 产生多个节点，
+     *  这个时候就需要 Cluster 将多个服务节点合并为一个，并生成一个 Invoker。
+     */
     protected <T> ClusterInvoker<T> getInvoker(Cluster cluster, Registry registry, Class<T> type, URL url) {
         DynamicDirectory<T> directory = createDirectory(type, url);
         // 设置注册中心和协议
