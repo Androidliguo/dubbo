@@ -375,6 +375,10 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                 if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())) {
                     //加载注册中心 url
                     checkRegistry();
+                    // registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=demo-consumer&dubbo=2.0.2
+                    // &enable-auto-migration=true&enable.auto.migration=true
+                    // &id=org.apache.dubbo.config.RegistryConfig&mapping-type=metadata&mapping.type=metadata&pid=14274
+                    // &qos.port=33333&registry=zookeeper&timestamp=1619696697918
                     List<URL> us = ConfigValidationUtils.loadRegistries(this, false);
                     if (CollectionUtils.isNotEmpty(us)) {
                         for (URL u : us) {

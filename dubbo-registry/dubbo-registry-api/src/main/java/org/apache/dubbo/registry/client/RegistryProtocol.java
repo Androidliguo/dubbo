@@ -461,6 +461,15 @@ public class RegistryProtocol implements Protocol {
     /**
      * 首先为 url 设置协议头，然后根据 url 参数加载注册中心实例。
      * 然后获取 group 配置，根据 group 配置决定 doRefer 第一个参数的类型。
+     * url:
+     * zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=demo-consumer&dubbo=2.0.2
+     * &enable-auto-migration=true&enable.auto.migration=true&id=org.apache.dubbo.config.RegistryConfig
+     * &mapping-type=metadata&mapping.type=metadata&pid=14314&qos.port=33333&refer=application=demo-consumer&check=false
+     * &dubbo=2.0.2&enable-auto-migration=true&enable.auto.migration=true&init=false
+     * &interface=org.apache.dubbo.demo.DemoService&mapping-type=metadata
+     * &mapping.type=metadata&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=14314&provided-by=demo-provider
+     * &qos.port=33333&register.ip=192.168.200.71&side=consumer&sticky=false&timestamp=1619696878877&timestamp=1619696887885
+     *
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -469,6 +478,7 @@ public class RegistryProtocol implements Protocol {
         // 取 registry 参数值，并将其设置为协议头
         url = getRegistryUrl(url);
         // 获取注册中心实例
+        // ListenerRegistryWrapper
         Registry registry = registryFactory.getRegistry(url);
         if (RegistryService.class.equals(type)) {
             return proxyFactory.getInvoker((T) registry, type, url);
@@ -537,6 +547,9 @@ public class RegistryProtocol implements Protocol {
     }
 
     protected <T> DynamicDirectory<T> createDirectory(Class<T> type, URL url) {
+        logger.info("createDirectory.......");
+        logger.info("createDirectory.......");
+        logger.info("createDirectory.......");
         return new ServiceDiscoveryRegistryDirectory<>(type, url);
     }
 

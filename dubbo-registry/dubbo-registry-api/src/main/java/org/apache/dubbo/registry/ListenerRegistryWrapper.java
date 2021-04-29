@@ -51,6 +51,15 @@ public class ListenerRegistryWrapper implements Registry {
         registry.destroy();
     }
 
+    /**
+     * url:
+     * consumer://192.168.200.71/org.apache.dubbo.demo.DemoService?application=demo-consumer&category=consumers&check=false
+     * &dubbo=2.0.2&enable-auto-migration=true&enable.auto.migration=true&id=org.apache.dubbo.config.RegistryConfig
+     * &init=false&interface=org.apache.dubbo.demo.DemoService
+     * &mapping-type=metadata&mapping.type=metadata&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=14314
+     * &provided-by=demo-provider&qos.port=33333&side=consumer&sticky=false&timestamp=1619696878877
+     *
+     */
     @Override
     public void register(URL url) {
         try {

@@ -418,6 +418,15 @@ public class DubboProtocol extends AbstractProtocol {
         }
     }
 
+    /**
+     *url:
+     * dubbo://192.168.200.71:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=demo-consumer
+     * &check=false&deprecated=false&dubbo=2.0.2&dynamic=true&enable-auto-migration=true&enable.auto.migration=true
+     * &generic=false&init=false&interface=org.apache.dubbo.demo.DemoService
+     * &mapping-type=metadata&mapping.type=metadata&metadata-type=remote&methods=sayHello,sayHelloAsync
+     * &pid=14314&provided-by=demo-provider&qos.port=33333&register.ip=192.168.200.71
+     * &release=&remote.application=demo-provider&side=consumer&sticky=false&timeout=3000&timestamp=1619696566600
+     */
     @Override
     public <T> Invoker<T> protocolBindingRefer(Class<T> serviceType, URL url) throws RpcException {
         optimizeSerialization(url);
