@@ -459,6 +459,7 @@ public class RegistryProtocol implements Protocol {
     }
 
     /**
+     * 注意此时注入的是 InterfaceCompatibleRegistryProtocol实例
      * 首先为 url 设置协议头，然后根据 url 参数加载注册中心实例。
      * 然后获取 group 配置，根据 group 配置决定 doRefer 第一个参数的类型。
      * url:
@@ -532,6 +533,11 @@ public class RegistryProtocol implements Protocol {
         // all attributes of REFER_KEY
         Map<String, String> parameters = new HashMap<String, String>(directory.getConsumerUrl().getParameters());
         // 生成服务消费者链接
+        // consumer://192.168.200.71/org.apache.dubbo.demo.DemoService?application=demo-consumer&check=false&dubbo=2.0.2
+        // &enable-auto-migration=true&enable.auto.migration=true&id=org.apache.dubbo.config.RegistryConfig&init=false
+        // &interface=org.apache.dubbo.demo.DemoService&mapping-type=metadata&mapping.type=metadata&metadata-type=remote
+        // &methods=sayHello,sayHelloAsync&pid=15078&provided-by=demo-provider&qos.port=33333&side=consumer&sticky=false
+        // &timestamp=1619747445674
         URL urlToRegistry = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
         // 注册服务消费者，在 consumers 目录下新节点
         if (directory.isShouldRegister()) {
