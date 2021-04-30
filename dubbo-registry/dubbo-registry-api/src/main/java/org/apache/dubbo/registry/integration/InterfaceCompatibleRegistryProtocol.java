@@ -66,6 +66,19 @@ public class InterfaceCompatibleRegistryProtocol extends RegistryProtocol {
         return new RegistryDirectory<>(type, url);
     }
 
+    /**
+     * registry: ListenerRegistryWrapper
+     * cluster: MockClusterWrapper
+     * url: zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=demo-consumer&dubbo=2.0.2
+     * &enable-auto-migration=true&enable.auto.migration=true&id=org.apache.dubbo.config.RegistryConfig&mapping-type=metadata
+     * &mapping.type=metadata&pid=16095&qos.port=33333&refer=application=demo-consumer&check=false&dubbo=2.0.2
+     * &enable-auto-migration=true&enable.auto.migration=true&init=false&interface=org.apache.dubbo.demo.DemoService
+     * &mapping-type=metadata&mapping.type=metadata&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=16095
+     * &provided-by=demo-provider&qos.port=33333&register.ip=192.168.200.71&side=consumer&sticky=false
+     * &timestamp=1619769228719&timestamp=1619769242503
+     *
+     * 层层封装 invoker
+     */
     protected <T> Invoker<T> doRefer(Cluster cluster, Registry registry, Class<T> type, URL url) {
         ClusterInvoker<T> invoker = getInvoker(cluster, registry, type, url);
         ClusterInvoker<T> serviceDiscoveryInvoker = getServiceDiscoveryInvoker(cluster, type, url);

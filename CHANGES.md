@@ -439,7 +439,7 @@ Bugfixes：
 - Our customized serialization id exceeds the maximum limit, now it cannot work on 2.6.2 anymore. [#1903](https://github.com/apache/dubbo/issues/1903) 
 - Consumer throws RpcException after RegistryDirectory notify in high QPS. [#2016](https://github.com/apache/dubbo/issues/2016)   
 - Annotation @Reference can't support to export a service with a sync one and an async one . [#2194](https://github.com/apache/dubbo/issues/2194) 
-- `org.apache.dubbo.config.spring.beans.factory.annotation.ReferenceAnnotationBeanPostProcessor#generateReferenceBeanCacheKey` has a bug. [#2522](https://github.com/apache/dubbo/issues/2522) 
+- `org.apache.dubbo.config.spring.beans.factory.annotation.ReferenceAnnotationBeanPostProcessor#generateCacheKey` has a bug. [#2522](https://github.com/apache/dubbo/issues/2522) 
 - 2.6.x Spring Event & Bugfix. [#2256](https://github.com/apache/dubbo/issues/2256) 
 - Fix incorrect descriptions for dubbo-serialization module. [#2665](https://github.com/apache/dubbo/issues/2665) 
 - A empty directory dubbo-config/dubbo-config-spring/src/test/resources/work after package source tgz. [#2560](https://github.com/apache/dubbo/issues/2560)

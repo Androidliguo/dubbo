@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.registry.client;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.config.ConfigurationUtils;
 import org.apache.dubbo.common.config.configcenter.DynamicConfiguration;
@@ -502,6 +503,11 @@ public class RegistryProtocol implements Protocol {
         return doRefer(cluster, registry, type, url);
     }
 
+    /**
+     *
+     * 注意此时注入的是 InterfaceCompatibleRegistryProtocol实例
+     * 调用的是 InterfaceCompatibleRegistryProtocol实例 的doRefer方法
+     */
     protected <T> Invoker<T> doRefer(Cluster cluster, Registry registry, Class<T> type, URL url) {
         return interceptInvoker(getInvoker(cluster, registry, type, url), url);
     }
@@ -515,10 +521,13 @@ public class RegistryProtocol implements Protocol {
         for (RegistryProtocolListener listener : listeners) {
             listener.onRefer(this, invoker);
         }
+        logger.info("interceptInvoker invoker = {}" + JSONObject.toJSONString(invoker), null);
         return invoker;
     }
 
     /**
+     * registry:ListenerRegistryWrapper
+     *
      *  doRefer 方法创建一个 RegistryDirectory 实例，然后生成服务者消费者链接，并向注册中心进行注册。
      *  注册完毕后，紧接着订阅 providers、configurators、routers 等节点下的数据。
      *  完成订阅后，RegistryDirectory 会收到这几个节点下的子节点信息。
@@ -542,6 +551,7 @@ public class RegistryProtocol implements Protocol {
         // 注册服务消费者，在 consumers 目录下新节点
         if (directory.isShouldRegister()) {
             directory.setRegisteredConsumerUrl(urlToRegistry);
+            // 注意此时的registry类型为ListenerRegistryWrapper
             registry.register(directory.getRegisteredConsumerUrl());
         }
         directory.buildRouterChain(urlToRegistry);

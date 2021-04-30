@@ -96,6 +96,9 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
         super(serviceType, url);
     }
 
+    /**
+     * registry: ListenerRegistryWrapper
+     */
     @Override
     public void subscribe(URL url) {
         setConsumerUrl(url);
@@ -328,7 +331,14 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
     }
 
     /**
+     *
+     * protocol.refer会先经过ProtocolListenerWrapper和ProtocolFilterWrapper构建监听器链和过滤器链
+     * 根据url获取ExchangeClient对象，构建消费者和提供者的底层通信链接。
+     * 创建DubboInvoker，它包含对远程提供者的长链接，从而可以真正执行远程调用。并返回给目录服务RegistryDirectory持有
+     *
      * Turn urls into invokers, and if url has been refer, will not re-reference.
+     * toInvokers(invokerUrls) ->
+     * invoker = new InvokerDelegate<T>(protocol.refer(serviceType, url), url, providerUrl)
      *
      * @param urls
      * @return invokers
@@ -382,6 +392,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
                     } else {
                         enabled = url.getParameter(ENABLED_KEY, true);
                     }
+                    // DubboProtocol refer
                     if (enabled) {
                         invoker = new InvokerDelegate<>(protocol.refer(serviceType, url), url, providerUrl);
                     }
