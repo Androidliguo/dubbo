@@ -476,7 +476,6 @@ public class RegistryProtocol implements Protocol {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
-
         // 取 registry 参数值，并将其设置为协议头
         url = getRegistryUrl(url);
         // 获取注册中心实例
@@ -485,7 +484,6 @@ public class RegistryProtocol implements Protocol {
         if (RegistryService.class.equals(type)) {
             return proxyFactory.getInvoker((T) registry, type, url);
         }
-
         // group="a,b" or group="*"
         // 将 url 查询字符串转为 Map
         Map<String, String> qs = StringUtils.parseQueryString(url.getParameterAndDecoded(REFER_KEY));
@@ -497,7 +495,6 @@ public class RegistryProtocol implements Protocol {
                 return doRefer(Cluster.getCluster(MergeableCluster.NAME), registry, type, url);
             }
         }
-
         Cluster cluster = Cluster.getCluster(qs.get(CLUSTER_KEY));
         // 调用 doRefer 继续执行服务引用逻辑
         return doRefer(cluster, registry, type, url);
