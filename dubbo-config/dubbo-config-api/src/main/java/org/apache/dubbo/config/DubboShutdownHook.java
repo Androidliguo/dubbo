@@ -64,6 +64,11 @@ public class DubboShutdownHook extends Thread {
         return DUBBO_SHUTDOWN_HOOK;
     }
 
+    /**
+     * DubboShutdownHook继承了Thread方法
+     * 在JVM关闭后，由于注册了DubboShutdownHook勾子，
+     * 因此会回调此run方法进行销毁相关服务
+     */
     @Override
     public void run() {
         if (logger.isInfoEnabled()) {
@@ -81,12 +86,22 @@ public class DubboShutdownHook extends Thread {
         callbacks.clear();
     }
 
+    /**
+     * DubboShutdownHook中的callbacks变量：
+     * private final ShutdownHookCallbacks callbacks
+     * = ShutdownHookCallbacks.INSTANCE;
+     * 在DubboBootstrap的构造方法中，调用了如下方法为ShutdownHookCallbacks.INSTANCE
+     * 添加callback
+     * ShutdownHookCallbacks.INSTANCE.addCallback
+     */
     private void callback() {
         callbacks.callback();
     }
 
     /**
      * Register the ShutdownHook
+     * DubboShutdownHook中的register方法中注册了勾子：
+     * 在JVM关闭的时候，注册了DubboShutdownHook勾子
      */
     public void register() {
         if (registered.compareAndSet(false, true)) {
@@ -123,9 +138,16 @@ public class DubboShutdownHook extends Thread {
         return registered.get();
     }
 
+    /**
+     * DubboBootstrap的destroyAll方法
+     * 1.销毁注册中心
+     * 2.消费protocol
+     */
     public static void destroyAll() {
         if (destroyed.compareAndSet(false, true)) {
+            // 销毁注册中心
             AbstractRegistryFactory.destroyAll();
+            // 销毁protocol
             destroyProtocols();
         }
     }

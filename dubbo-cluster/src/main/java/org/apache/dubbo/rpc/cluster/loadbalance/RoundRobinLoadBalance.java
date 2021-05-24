@@ -86,6 +86,11 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
         return null;
     }
 
+    /**
+     * 此方法简单点总结就是从 invoker 列表中根据权重选择一个invoker，来执行。
+     * 其中,getWeight()方法就是获取某个invoker的权重。
+     *
+     */
     @Override
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
         String key = invokers.get(0).getUrl().getServiceKey() + "." + invocation.getMethodName();
@@ -97,6 +102,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
         WeightedRoundRobin selectedWRR = null;
         for (Invoker<T> invoker : invokers) {
             String identifyString = invoker.getUrl().toIdentityString();
+            // 获取invoker的权重
             int weight = getWeight(invoker, invocation);
             WeightedRoundRobin weightedRoundRobin = map.computeIfAbsent(identifyString, k -> {
                 WeightedRoundRobin wrr = new WeightedRoundRobin();
