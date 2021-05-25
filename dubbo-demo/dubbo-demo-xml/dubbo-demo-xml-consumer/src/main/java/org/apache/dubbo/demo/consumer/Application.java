@@ -17,8 +17,9 @@
 package org.apache.dubbo.demo.consumer;
 
 import org.apache.dubbo.demo.DemoService;
+import org.apache.dubbo.demo.ExceptionService;
 import org.apache.dubbo.demo.GreetingService;
-
+import org.apache.dubbo.rpc.service.GenericService;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.concurrent.CompletableFuture;
@@ -34,6 +35,24 @@ public class Application {
         context.start();
         DemoService demoService = context.getBean("demoService", DemoService.class);
         GreetingService greetingService = context.getBean("greetingService", GreetingService.class);
+        ExceptionService exceptionService = context.getBean("exceptionService", ExceptionService.class);
+        GenericService myGenericService = (GenericService) context.getBean("myGenericService");
+        // 基本类型以及Date,List,Map等不需要转换，直接调用
+        Object resultObj = myGenericService.$invoke("sayHello", new String[] {"java.lang.String"},
+                new Object[] {"guoxi.li"});
+
+
+        new Thread(() -> {
+            while (true) {
+                exceptionService.hello();
+                System.out.println(" exceptionService.");
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
 
         new Thread(() -> {
             while (true) {

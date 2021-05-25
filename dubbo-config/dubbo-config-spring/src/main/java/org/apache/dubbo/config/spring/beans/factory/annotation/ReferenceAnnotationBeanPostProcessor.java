@@ -20,7 +20,7 @@ import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.apache.dubbo.config.annotation.Reference;
 import org.apache.dubbo.config.annotation.Service;
-import org.apache.dubbo.config.spring.ReferenceBean;
+import org.apache.dubbo.config.spring.*;
 import org.apache.dubbo.config.spring.ServiceBean;
 
 import com.alibaba.spring.beans.factory.annotation.AbstractAnnotationBeanPostProcessor;

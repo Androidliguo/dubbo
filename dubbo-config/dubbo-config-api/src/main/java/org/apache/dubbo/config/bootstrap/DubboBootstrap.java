@@ -202,11 +202,16 @@ public class DubboBootstrap extends GenericEventListener {
         return instance;
     }
 
+    /**
+     * 构建DubboBootstrap的时候，添加了DubboShutdownHook回调
+     */
     private DubboBootstrap() {
         configManager = ApplicationModel.getConfigManager();
         environment = ApplicationModel.getEnvironment();
 
+        // 注册DubboShutdownHook
         DubboShutdownHook.getDubboShutdownHook().register();
+        // 添加callback回调
         ShutdownHookCallbacks.INSTANCE.addCallback(new ShutdownHookCallback() {
             @Override
             public void callback() throws Throwable {
@@ -1278,11 +1283,17 @@ public class DubboBootstrap extends GenericEventListener {
         return this.serviceInstance;
     }
 
+    /**
+     * 在Dubbo服务关闭的时候，最终调用的是DubboBootstrap中的
+     * destroy方法进行服务的销毁
+     */
     public void destroy() {
         if (destroyLock.tryLock()) {
             try {
+                // 销毁注册中心 和 protocol
                 DubboShutdownHook.destroyAll();
 
+                // started 和 destroyed是标记
                 if (started.compareAndSet(true, false)
                         && destroyed.compareAndSet(false, true)) {
 
