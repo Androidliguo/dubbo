@@ -39,6 +39,6 @@
     <dubbo:reference provided-by="demo-provider" id="exceptionService" check="false"
                      interface="org.apache.dubbo.demo.ExceptionService"/>
 
-    <dubbo:reference provided-by="demo-provider" id="myGenericService" check="false"
-                     interface="org.apache.dubbo.demo.provider.GenericService" generic="true"/>
+    <dubbo:reference provided-by="demo-provider" id="genericTestService" check="false"
+                     interface="org.apache.dubbo.demo.provider.GenericTestService" generic="true"/>
 </beans>

@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.demo.consumer;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.dubbo.demo.DemoService;
 import org.apache.dubbo.demo.ExceptionService;
 import org.apache.dubbo.demo.GreetingService;
@@ -36,10 +37,11 @@ public class Application {
         DemoService demoService = context.getBean("demoService", DemoService.class);
         GreetingService greetingService = context.getBean("greetingService", GreetingService.class);
         ExceptionService exceptionService = context.getBean("exceptionService", ExceptionService.class);
-        GenericService myGenericService = (GenericService) context.getBean("myGenericService");
+        GenericService myGenericService = (GenericService) context.getBean("genericTestService");
         // 基本类型以及Date,List,Map等不需要转换，直接调用
         Object resultObj = myGenericService.$invoke("sayHello", new String[] {"java.lang.String"},
                 new Object[] {"guoxi.li"});
+        System.out.println("sayHello" + JSONObject.toJSONString(resultObj));
 
 
         new Thread(() -> {

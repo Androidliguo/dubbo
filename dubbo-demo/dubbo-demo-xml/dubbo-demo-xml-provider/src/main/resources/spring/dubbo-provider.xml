@@ -40,8 +40,8 @@
                    ref="greetingService"/>
     <dubbo:service interface="org.apache.dubbo.demo.ExceptionService" timeout="3000" ref="exceptionService" registry="registry1"/>
 
-    <bean id="myGenericService" class="org.apache.dubbo.demo.provider.MyGenericService" />
-    <dubbo:service interface="org.apache.dubbo.demo.provider.GenericService" ref="myGenericService" registry="registry1"/>
+    <bean id="genericTestService" class="org.apache.dubbo.demo.provider.GenericTestServiceImpl" />
+    <dubbo:service interface="org.apache.dubbo.demo.provider.GenericTestService" ref="genericTestService" registry="registry1"/>
 
 
 </beans>
