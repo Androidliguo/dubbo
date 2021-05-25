@@ -53,12 +53,18 @@ public class ProtocolFilterWrapper implements Protocol {
 
     private static <T> Invoker<T> buildInvokerChain(final Invoker<T> invoker, String key, String group) {
         Invoker<T> last = invoker;
+
+        // (1)加载所有包含Activate注解的过滤器
+        // (2)根据group过滤得到过滤器列表
+        // (3)Invoker最终被放到过滤器链尾部
         List<Filter> filters = ExtensionLoader.getExtensionLoader(Filter.class).getActivateExtension(invoker.getUrl(), key, group);
 
         if (!filters.isEmpty()) {
+            // 注意这里的过滤器是从倒序的，从后往前
             for (int i = filters.size() - 1; i >= 0; i--) {
                 final Filter filter = filters.get(i);
                 final Invoker<T> next = last;
+                // 构造一个简化Invoker
                 last = new Invoker<T>() {
 
                     @Override
@@ -78,6 +84,7 @@ public class ProtocolFilterWrapper implements Protocol {
 
                     @Override
                     public Result invoke(Invocation invocation) throws RpcException {
+                        // 构造过滤器链路
                         Result asyncResult;
                         try {
                             asyncResult = filter.invoke(next, invocation);
@@ -147,6 +154,12 @@ public class ProtocolFilterWrapper implements Protocol {
         return protocol.getDefaultPort();
     }
 
+    /**
+     * 生产者最终生成的链路是:
+     * EchoFilter -> ClassloaderFilter -> GenericFilter -> ContextFilter -> TraceFilter
+     * -> TimeoutFilter -> MonitorFilter -> ExceptionFilter -> AbstractProxyInvoker
+     *
+     */
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
 
@@ -154,14 +167,20 @@ public class ProtocolFilterWrapper implements Protocol {
         if (UrlUtils.isRegistry(invoker.getUrl())) {
             return protocol.export(invoker);
         }
+        // 增加过滤器链
         return protocol.export(buildInvokerChain(invoker, SERVICE_FILTER_KEY, CommonConstants.PROVIDER));
     }
 
+    /**
+     * 消费者最终生成的链路是:
+     * ConsumerContextFilter -> FutureFilter -> MonitorFilter -> GenericImplFilter -> DubboInvoker
+     */
     @Override
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
         if (UrlUtils.isRegistry(url)) {
             return protocol.refer(type, url);
         }
+        // 增加过滤器链
         return buildInvokerChain(protocol.refer(type, url), REFERENCE_FILTER_KEY, CommonConstants.CONSUMER);
     }
 

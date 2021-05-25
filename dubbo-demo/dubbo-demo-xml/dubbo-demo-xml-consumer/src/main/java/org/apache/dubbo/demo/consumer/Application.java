@@ -22,6 +22,7 @@ import org.apache.dubbo.demo.GreetingService;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class Application {
     /**
@@ -46,14 +47,16 @@ public class Application {
             }
         }).start();
 
-        while (true) {
-            CompletableFuture<String> hello = demoService.sayHelloAsync("world");
-            System.out.println("result: " + hello.get());
+        Thread.sleep(100 * 1000L);
 
-            String greetings = greetingService.hello();
-            System.out.println("result: " + greetings);
-
-            Thread.sleep(500);
-        }
+//        while (true) {
+////            CompletableFuture<String> hello = demoService.sayHelloAsync("world");
+////            System.out.println("result: " + hello.get());
+////
+////            String greetings = greetingService.hello();
+////            System.out.println("result: " + greetings);
+////
+////            Thread.sleep(500);
+////        }
     }
 }
