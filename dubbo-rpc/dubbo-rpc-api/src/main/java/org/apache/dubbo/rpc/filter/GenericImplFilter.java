@@ -48,6 +48,7 @@ import static org.apache.dubbo.rpc.Constants.GENERIC_KEY;
 
 /**
  * GenericImplInvokerFilter
+ * 实现 Filter 接口，服务消费者的泛化调用过滤器
  */
 @Activate(group = CommonConstants.CONSUMER, value = GENERIC_KEY, order = 20000)
 public class GenericImplFilter implements Filter, Filter.Listener {
@@ -60,8 +61,10 @@ public class GenericImplFilter implements Filter, Filter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 获得 `generic` 配置项
         String generic = invoker.getUrl().getParameter(GENERIC_KEY);
         // calling a generic impl service
+        //服务端是泛化暴露，客户端不是使用泛化调用场景
         if (isCallingGenericImpl(generic, invocation)) {
             RpcInvocation invocation2 = new RpcInvocation(invocation);
 
@@ -101,9 +104,11 @@ public class GenericImplFilter implements Filter, Filter.Listener {
             return invoker.invoke(invocation2);
         }
         // making a generic call to a normal service
+        //服务端非泛化暴露，消费使用泛化调用
         else if (isMakingGenericCall(generic, invocation)) {
 
             Object[] args = (Object[]) invocation.getArguments()[2];
+            // `nativejava` ，校验方法参数都为 byte[]
             if (ProtocolUtils.isJavaGenericSerialization(generic)) {
 
                 for (Object arg : args) {
@@ -111,6 +116,7 @@ public class GenericImplFilter implements Filter, Filter.Listener {
                         error(generic, byte[].class.getName(), arg.getClass().getName());
                     }
                 }
+                // `bean` ，校验方法参数为 JavaBeanDescriptor
             } else if (ProtocolUtils.isBeanGenericSerialization(generic)) {
                 for (Object arg : args) {
                     if (!(arg instanceof JavaBeanDescriptor)) {
@@ -119,6 +125,7 @@ public class GenericImplFilter implements Filter, Filter.Listener {
                 }
             }
 
+            // 通过隐式参数，传递 `generic` 配置项
             invocation.setAttachment(
                     GENERIC_KEY, invoker.getUrl().getParameter(GENERIC_KEY));
         }

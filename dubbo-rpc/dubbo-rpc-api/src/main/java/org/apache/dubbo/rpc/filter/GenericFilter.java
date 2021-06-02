@@ -51,12 +51,14 @@ import static org.apache.dubbo.rpc.Constants.GENERIC_KEY;
 
 /**
  * GenericInvokerFilter.
+ * com.alibaba.dubbo.rpc.filter.GenericFilter ，实现 Filter 接口，服务消费者的泛化调用过滤器。
  */
 @Activate(group = CommonConstants.PROVIDER, order = -20000)
 public class GenericFilter implements Filter, Filter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation inv) throws RpcException {
+        // 泛化引用的调用
         if ((inv.getMethodName().equals($INVOKE) || inv.getMethodName().equals($INVOKE_ASYNC))
                 && inv.getArguments() != null
                 && inv.getArguments().length == 3
@@ -65,7 +67,9 @@ public class GenericFilter implements Filter, Filter.Listener {
             String[] types = (String[]) inv.getArguments()[1];
             Object[] args = (Object[]) inv.getArguments()[2];
             try {
+                // 获得对应的方法 Method 对象
                 Method method = ReflectUtils.findMethodByMethodSignature(invoker.getInterface(), name, types);
+                // 获得方法参数类型和方法参数数组
                 Class<?>[] params = method.getParameterTypes();
                 if (args == null) {
                     args = new Object[params.length];
@@ -79,16 +83,19 @@ public class GenericFilter implements Filter, Filter.Listener {
                     throw new RpcException("GenericFilter#invoke args.length != types.length, please check your "
                             + "params");
                 }
+                // 获得 `generic` 配置项
                 String generic = inv.getAttachment(GENERIC_KEY);
 
                 if (StringUtils.isBlank(generic)) {
                     generic = RpcContext.getContext().getAttachment(GENERIC_KEY);
                 }
 
+                // 【第一步】`true` ，反序列化参数，仅有 Map => POJO
                 if (StringUtils.isEmpty(generic)
                         || ProtocolUtils.isDefaultGenericSerialization(generic)
                         || ProtocolUtils.isGenericReturnRawResult(generic)) {
                     args = PojoUtils.realize(args, params, method.getGenericParameterTypes());
+                 // 【第一步】`nativejava` ，反序列化参数，byte[] => 方法参数
                 } else if (ProtocolUtils.isJavaGenericSerialization(generic)) {
                     for (int i = 0; i < args.length; i++) {
                         if (byte[].class == args[i].getClass()) {
@@ -109,6 +116,7 @@ public class GenericFilter implements Filter, Filter.Listener {
                                             args[i].getClass());
                         }
                     }
+                 // 【第一步】`bean` ，反序列化参数，JavaBeanDescriptor => 方法参数
                 } else if (ProtocolUtils.isBeanGenericSerialization(generic)) {
                     for (int i = 0; i < args.length; i++) {
                         if (args[i] instanceof JavaBeanDescriptor) {
